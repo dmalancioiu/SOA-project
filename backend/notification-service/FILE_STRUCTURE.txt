@@ -1,0 +1,67 @@
+Notification Service - Complete File Structure
+================================================
+
+CONFIGURATION FILES:
+- pom.xml                              (Maven build configuration with all dependencies)
+- src/main/resources/application.yml   (Spring Boot configuration)
+- src/test/resources/application-test.yml (Test configuration)
+- .gitignore                           (Git ignore rules)
+- docker-compose.yml                   (Local development environment)
+- Dockerfile                           (Multi-stage Docker build)
+
+JAVA SOURCE CODE:
+- NotificationServiceApplication.java  (Main entry point)
+
+CONFIG PACKAGE (src/main/java/com/fooddelivery/notificationservice/config/):
+- WebSocketConfig.java                 (STOMP WebSocket configuration)
+- WebSocketSecurityConfig.java         (JWT security for WebSocket)
+- RedisConfig.java                     (Redis template configuration)
+- RedisMessageListenerConfig.java      (Redis pub/sub listener setup)
+- KafkaConsumerConfig.java             (Kafka consumer configuration)
+- RabbitMQConfig.java                  (RabbitMQ queues and exchanges)
+
+DTO PACKAGE (src/main/java/com/fooddelivery/notificationservice/dto/):
+- NotificationMessage.java             (Main notification data object)
+- NotificationType.java                (Notification type enum)
+- OrderEvent.java                      (Order event from Kafka)
+- DeliveryEvent.java                   (Delivery event from Kafka)
+- ApiResponse.java                     (Generic API response wrapper)
+
+SERVICE PACKAGE (src/main/java/com/fooddelivery/notificationservice/service/):
+- NotificationService.java             (Core notification logic)
+- KafkaConsumerService.java            (Kafka event consumer)
+- RabbitMQConsumerService.java         (RabbitMQ message consumer)
+
+CONTROLLER PACKAGE (src/main/java/com/fooddelivery/notificationservice/controller/):
+- WebSocketController.java             (WebSocket endpoints)
+
+LISTENER PACKAGE (src/main/java/com/fooddelivery/notificationservice/listener/):
+- RedisMessageListener.java            (Redis pub/sub message listener)
+
+SECURITY PACKAGE (src/main/java/com/fooddelivery/notificationservice/security/):
+- JwtTokenProvider.java                (JWT token generation/validation)
+- JwtAuthenticationFilter.java         (JWT authentication filter)
+
+DOCUMENTATION FILES:
+- README.md                            (Complete user guide and API documentation)
+- WEBSOCKET_CLIENT_EXAMPLE.md          (Client integration examples)
+- IMPLEMENTATION_SUMMARY.md            (Implementation details and overview)
+- DEPLOYMENT_GUIDE.md                  (Deployment instructions for various platforms)
+- FILE_STRUCTURE.txt                   (This file)
+
+TOTAL FILES: 30+
+TOTAL LINES OF CODE: ~3000+
+
+KEY FEATURES IMPLEMENTED:
+✓ WebSocket STOMP support with SockJS fallback
+✓ User-specific and broadcast notifications
+✓ Redis pub/sub for multi-instance scaling
+✓ Kafka event consumption (order.events, delivery.events, restaurant.events)
+✓ RabbitMQ message consumption (order.notifications, user.notifications, delivery.notifications)
+✓ JWT authentication and security
+✓ CORS configuration
+✓ Multi-stage Docker build
+✓ Docker Compose for local development
+✓ Comprehensive configuration management
+✓ Health checks and metrics
+✓ Complete documentation and examples

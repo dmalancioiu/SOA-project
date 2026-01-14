@@ -1,0 +1,42 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:8080
+
+functions:
+  auto-close-orders:
+    lang: python3
+    handler: ./auto-close-orders
+    image: auto-close-orders:latest
+    description: Automatically close orders that have been delivered for longer than the threshold time
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: food_delivery
+      DB_PORT: 3306
+      AUTO_CLOSE_TIME_HOURS: 2
+      BATCH_SIZE: 100
+      NOTIFICATION_ENABLED: "true"
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "order"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    annotations:
+      prometheus_uri: "/metrics"
+      prometheus_path: "/metrics"
+      schedule: "*/5 * * * *"
+      schedule_syntax: "cron"
+    secrets:
+      - db-password
+    environment_file:
+      - .env
+    docker_registry: ""
+    docker_repository: ""
+    network: ""

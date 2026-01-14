@@ -1,0 +1,38 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:8080
+
+functions:
+  delivery-analytics:
+    lang: python3
+    handler: ./delivery-analytics
+    image: delivery-analytics:latest
+    description: Calculate delivery time analytics and performance metrics
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "analytics"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    annotations:
+      prometheus_uri: "/metrics"
+      prometheus_path: "/metrics"
+    secrets:
+      - redis-password
+    environment_file:
+      - .env
+    build_args:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+    docker_registry: ""
+    docker_repository: ""
+    network: ""

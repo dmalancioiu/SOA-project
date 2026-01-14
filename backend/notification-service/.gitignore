@@ -1,0 +1,76 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Build
+target/
+build/
+.gradle/
+*.jar
+*.war
+*.ear
+.class
+
+# Maven
+.maven/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Spring Boot
+application.properties
+application.yml
+*.log
+
+# Logs
+logs/
+*.log
+*.gz
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if used for client)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Test
+coverage/
+.coverage
+
+# IDE specific
+.classpath
+.project
+.settings/
+*.launch
+.sts4-cache/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Package files
+*.rar
+*.zip
+*.tar.gz

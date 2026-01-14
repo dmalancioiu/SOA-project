@@ -1,0 +1,27 @@
+{
+  "name": "order-completion-function",
+  "version": "1.0.0",
+  "description": "OpenFaaS function for handling order completion",
+  "main": "handler.js",
+  "scripts": {
+    "start": "node handler.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "openfaas",
+    "food-delivery",
+    "order-completion"
+  ],
+  "author": "Food Delivery Platform",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.0",
+    "mysql2": "^3.5.0",
+    "nodemailer": "^6.9.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

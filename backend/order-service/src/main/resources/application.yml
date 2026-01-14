@@ -1,0 +1,91 @@
+spring:
+  application:
+    name: order-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/order_service_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 60000ms
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: order-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    topics:
+      order-events: order.events
+      restaurant-events: restaurant.events
+
+server:
+  port: 8083
+
+feign:
+  client:
+    config:
+      restaurant-service:
+        url: http://localhost:8081
+        connectTimeout: 5000
+        readTimeout: 5000
+      delivery-service:
+        url: http://localhost:8084
+        connectTimeout: 5000
+        readTimeout: 5000
+
+jwt:
+  secret: your-secret-key-change-this-in-production-at-least-32-characters-long!
+  expiration: 86400000
+
+rabbitmq:
+  queues:
+    order-delivery-assignment: order.delivery.assignment
+    order-notifications: order.notifications
+  exchanges:
+    order-exchange: order.exchange
+  routingkeys:
+    order-delivery: order.delivery.assignment
+    order-notification: order.notification
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.fooddelivery: DEBUG
+    org.springframework.web: DEBUG

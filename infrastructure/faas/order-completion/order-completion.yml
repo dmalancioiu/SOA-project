@@ -1,0 +1,44 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:8080
+
+functions:
+  order-completion:
+    lang: node18
+    handler: ./order-completion
+    image: order-completion:latest
+    description: Handle order completion, send emails, update loyalty points, and generate receipts
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: food_delivery
+      EMAIL_SIMULATION: "true"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: noreply@fooddelivery.com
+      DEBUG: "false"
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "order"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    annotations:
+      prometheus_uri: "/metrics"
+      prometheus_path: "/metrics"
+    secrets:
+      - db-password
+      - smtp-password
+    environment_file:
+      - .env
+    docker_registry: ""
+    docker_repository: ""
+    network: ""

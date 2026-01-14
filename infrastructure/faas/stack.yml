@@ -1,0 +1,96 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:8080
+  network: faas-network
+  authorisation:
+    enable: false
+
+functions:
+  delivery-analytics:
+    lang: python3
+    handler: ./delivery-analytics
+    image: delivery-analytics:latest
+    description: Calculate delivery time analytics and performance metrics
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "analytics"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    secrets:
+      - redis-password
+    annotations:
+      prometheus_uri: "/metrics"
+
+  order-completion:
+    lang: node18
+    handler: ./order-completion
+    image: order-completion:latest
+    description: Handle order completion, send emails, update loyalty points, and generate receipts
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: food_delivery
+      EMAIL_SIMULATION: "true"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: noreply@fooddelivery.com
+      DEBUG: "false"
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "order"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    secrets:
+      - db-password
+      - smtp-password
+    annotations:
+      prometheus_uri: "/metrics"
+
+  auto-close-orders:
+    lang: python3
+    handler: ./auto-close-orders
+    image: auto-close-orders:latest
+    description: Automatically close orders that have been delivered for longer than the threshold time
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: food_delivery
+      DB_PORT: 3306
+      AUTO_CLOSE_TIME_HOURS: 2
+      BATCH_SIZE: 100
+      NOTIFICATION_ENABLED: "true"
+    labels:
+      com.openfaas.function: "true"
+      com.fooddelivery.service: "order"
+      com.fooddelivery.version: "1.0"
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    secrets:
+      - db-password
+    annotations:
+      prometheus_uri: "/metrics"
+      schedule: "*/5 * * * *"
+      schedule_syntax: "cron"

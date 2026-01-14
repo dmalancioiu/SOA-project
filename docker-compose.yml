@@ -1,0 +1,391 @@
+version: '3.8'
+
+services:
+  # ==================== INFRASTRUCTURE ====================
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: fooddelivery-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: fooddelivery
+      MYSQL_USER: fooddelivery_user
+      MYSQL_PASSWORD: fooddelivery_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infrastructure/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fooddelivery-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and WebSocket scaling
+  redis:
+    image: redis:7-alpine
+    container_name: fooddelivery-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fooddelivery-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: fooddelivery-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    networks:
+      - fooddelivery-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: fooddelivery-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - fooddelivery-network
+
+  # Kafka Event Streaming
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: fooddelivery-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    networks:
+      - fooddelivery-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==================== BACKEND SERVICES ====================
+
+  # User Service
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: fooddelivery-user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fooddelivery?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: fooddelivery_user
+      SPRING_DATASOURCE_PASSWORD: fooddelivery_pass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # Restaurant Service
+  restaurant-service:
+    build:
+      context: ./backend/restaurant-service
+      dockerfile: Dockerfile
+    container_name: fooddelivery-restaurant-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fooddelivery?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: fooddelivery_user
+      SPRING_DATASOURCE_PASSWORD: fooddelivery_pass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # Order Service
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: fooddelivery-order-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fooddelivery?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: fooddelivery_user
+      SPRING_DATASOURCE_PASSWORD: fooddelivery_pass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8082
+      DELIVERY_SERVICE_URL: http://delivery-service:8084
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # Delivery Service
+  delivery-service:
+    build:
+      context: ./backend/delivery-service
+      dockerfile: Dockerfile
+    container_name: fooddelivery-delivery-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fooddelivery?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: fooddelivery_user
+      SPRING_DATASOURCE_PASSWORD: fooddelivery_pass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+      FAAS_GATEWAY_URL: http://gateway:8080
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # Notification Service (WebSocket)
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    container_name: fooddelivery-notification-service
+    environment:
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+    ports:
+      - "8085:8085"
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: fooddelivery-api-gateway
+    environment:
+      USER_SERVICE_URL: http://user-service:8081
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8082
+      ORDER_SERVICE_URL: http://order-service:8083
+      DELIVERY_SERVICE_URL: http://delivery-service:8084
+      NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      JWT_SECRET: mySecretKeyForJWTTokenGenerationThatIsLongEnoughAndSecureForHS512Algorithm
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - restaurant-service
+      - order-service
+      - delivery-service
+      - notification-service
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+  # ==================== FAAS (OpenFaaS) ====================
+
+  # OpenFaaS Gateway
+  # gateway:
+  #   image: openfaas/gateway:0.27.4
+  #   container_name: fooddelivery-faas-gateway
+  #   environment:
+  #     functions_provider_url: "http://faas-swarm:8080/"
+  #     direct_functions: "true"
+  #     read_timeout: "300s"
+  #     write_timeout: "300s"
+  #     upstream_timeout: "300s"
+  #   ports:
+  #     - "8086:8080"
+  #   networks:
+  #     - fooddelivery-network
+  #   depends_on:
+  #     - faas-swarm
+
+  # # OpenFaaS Provider
+  # faas-swarm:
+  #   image: openfaas/faas-swarm:0.10.1
+  #   container_name: fooddelivery-faas-provider
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   networks:
+  #     - fooddelivery-network
+
+  # ==================== FRONTEND ====================
+
+  # Restaurant Catalog MFE
+  restaurant-catalog:
+    build:
+      context: ./frontend/restaurant-catalog
+      dockerfile: Dockerfile
+    container_name: fooddelivery-restaurant-catalog
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_WS_URL: ws://localhost:8085
+    ports:
+      - "3001:80"
+    networks:
+      - fooddelivery-network
+    depends_on:
+      - api-gateway
+
+  # Order Tracking MFE
+  order-tracking:
+    build:
+      context: ./frontend/order-tracking
+      dockerfile: Dockerfile
+    container_name: fooddelivery-order-tracking
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_WS_URL: ws://localhost:8085
+    ports:
+      - "3002:80"
+    networks:
+      - fooddelivery-network
+    depends_on:
+      - api-gateway
+
+  # User Dashboard MFE
+  user-dashboard:
+    build:
+      context: ./frontend/user-dashboard
+      dockerfile: Dockerfile
+    container_name: fooddelivery-user-dashboard
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_WS_URL: ws://localhost:8085
+    ports:
+      - "3003:80"
+    networks:
+      - fooddelivery-network
+    depends_on:
+      - api-gateway
+
+  # Main Shell App (Module Federation Host)
+  shell-app:
+    build:
+      context: ./frontend/shell-app
+      dockerfile: Dockerfile
+    container_name: fooddelivery-shell-app
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_WS_URL: ws://localhost:8085
+      REACT_APP_RESTAURANT_CATALOG_URL: http://localhost:3001
+      REACT_APP_ORDER_TRACKING_URL: http://localhost:3002
+      REACT_APP_USER_DASHBOARD_URL: http://localhost:3003
+    ports:
+      - "3000:80"
+    networks:
+      - fooddelivery-network
+    depends_on:
+      - restaurant-catalog
+      - order-tracking
+      - user-dashboard
+
+  # ==================== LOAD BALANCER ====================
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: fooddelivery-nginx
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+      - shell-app
+    networks:
+      - fooddelivery-network
+    restart: on-failure
+
+networks:
+  fooddelivery-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
