@@ -80,7 +80,7 @@ public class DeliveryService {
     }
 
     @Transactional(readOnly = true)
-    public List<DeliveryResponse> getDeliveriesByDriverId(Long driverId) {
+    public List<DeliveryResponse> getDeliveriesByDriverId(String driverId) {
         log.info("Fetching deliveries for driver: {}", driverId);
         List<Delivery> deliveries = deliveryRepository.findByDriverId(driverId);
         return deliveries.stream().map(this::mapToResponse).toList();

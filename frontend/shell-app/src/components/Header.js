@@ -96,7 +96,7 @@ const Header = () => {
               <Typography variant="body2" sx={{ mr: 2 }}>
                 Welcome, {user?.name || user?.email}
               </Typography>
-              <IconButton color="inherit" sx={{ mr: 1 }}>
+              <IconButton color="inherit" sx={{ mr: 1 }} onClick={() => navigate('/cart')}> {/* ADDED onClick */}
                 <Badge badgeContent={getTotalItems()} color="error">
                   <ShoppingCartIcon />
                 </Badge>

@@ -29,7 +29,7 @@ public class OrderController {
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderResponse>> getMyOrders(@RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<List<OrderResponse>> getMyOrders(@RequestHeader("X-User-Id") String userId) {
         log.info("Fetching orders for current user: {}", userId);
         List<OrderResponse> responses = orderService.getUserOrders(userId);
         return ResponseEntity.ok(responses);
@@ -43,7 +43,7 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderResponse>> getUserOrders(@PathVariable Long userId) {
+    public ResponseEntity<List<OrderResponse>> getUserOrders(@PathVariable String userId) {
         log.info("Fetching orders for user: {}", userId);
         List<OrderResponse> responses = orderService.getUserOrders(userId);
         return ResponseEntity.ok(responses);

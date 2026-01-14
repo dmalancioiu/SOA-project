@@ -17,7 +17,7 @@ public class DeliveryRequest {
     private Long orderId;
 
     @NotNull(message = "Driver ID cannot be null")
-    private Long driverId;
+    private String driverId;
 
     @NotBlank(message = "Pickup address cannot be blank")
     private String pickupAddress;

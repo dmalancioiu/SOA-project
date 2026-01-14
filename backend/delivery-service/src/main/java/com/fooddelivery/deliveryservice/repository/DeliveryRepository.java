@@ -13,7 +13,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
     Optional<Delivery> findByOrderId(Long orderId);
 
-    List<Delivery> findByDriverId(Long driverId);
+    List<Delivery> findByDriverId(String driverId);
 
     List<Delivery> findByStatus(DeliveryStatus status);
 

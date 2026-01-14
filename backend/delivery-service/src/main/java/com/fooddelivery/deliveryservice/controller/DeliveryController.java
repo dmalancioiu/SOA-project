@@ -30,7 +30,7 @@ public class DeliveryController {
     }
 
     @GetMapping("/my-deliveries")
-    public ResponseEntity<List<DeliveryResponse>> getMyDeliveries(@RequestHeader("X-User-Id") Long driverId) {
+    public ResponseEntity<List<DeliveryResponse>> getMyDeliveries(@RequestHeader("X-User-Id") String driverId) {
         log.info("Fetching deliveries for current driver: {}", driverId);
         List<DeliveryResponse> responses = deliveryService.getDeliveriesByDriverId(driverId);
         return ResponseEntity.ok(responses);
@@ -51,7 +51,7 @@ public class DeliveryController {
     }
 
     @GetMapping("/driver/{driverId}")
-    public ResponseEntity<List<DeliveryResponse>> getDeliveriesByDriverId(@PathVariable Long driverId) {
+    public ResponseEntity<List<DeliveryResponse>> getDeliveriesByDriverId(@PathVariable String driverId) {
         log.info("Fetching deliveries for driver: {}", driverId);
         List<DeliveryResponse> responses = deliveryService.getDeliveriesByDriverId(driverId);
         return ResponseEntity.ok(responses);

@@ -17,7 +17,7 @@ import java.util.List;
 public class CreateOrderRequest {
 
     @NotNull(message = "User ID cannot be null")
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "Restaurant ID cannot be null")
     private Long restaurantId;

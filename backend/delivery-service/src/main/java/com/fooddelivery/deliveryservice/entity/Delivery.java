@@ -26,7 +26,7 @@ public class Delivery {
     private Long orderId;
 
     @Column(nullable = false)
-    private Long driverId;
+    private String driverId;
 
     @Column(nullable = false)
     private String pickupAddress;

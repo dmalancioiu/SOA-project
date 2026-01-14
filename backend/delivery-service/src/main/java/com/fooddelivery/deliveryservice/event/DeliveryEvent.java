@@ -18,7 +18,7 @@ public class DeliveryEvent {
 
     private Long orderId;
 
-    private Long driverId;
+    private String driverId;
 
     private DeliveryStatus status;
 

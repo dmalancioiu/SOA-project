@@ -21,7 +21,7 @@ public class OrderResponse implements Serializable {
 
     private Long id;
 
-    private Long userId;
+    private String userId;
 
     private Long restaurantId;
 

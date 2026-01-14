@@ -21,7 +21,7 @@ public class DeliveryResponse implements Serializable {
 
     private Long orderId;
 
-    private Long driverId;
+    private String driverId;
 
     private String pickupAddress;
 

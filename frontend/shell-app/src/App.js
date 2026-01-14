@@ -15,6 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import CartPage from './pages/CartPage';
 
 // Lazy load remote modules
 const RestaurantCatalog = lazy(() => import('restaurantCatalog/RestaurantCatalog'));
@@ -99,6 +100,7 @@ function App() {
                       </PrivateRoute>
                     }
                   />
+                  <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
