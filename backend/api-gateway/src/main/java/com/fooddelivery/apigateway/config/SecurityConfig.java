@@ -17,11 +17,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/auth/**").permitAll()
-                        .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/health").permitAll()
-                        .pathMatchers("/ws/**").permitAll()
-                        .anyExchange().authenticated()
+                        // FIX: Permit ALL exchanges here. 
+                        // The actual security is enforced by the JwtAuthenticationFilter 
+                        // configured in GatewayConfig.java for specific routes.
+                        .anyExchange().permitAll()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable);

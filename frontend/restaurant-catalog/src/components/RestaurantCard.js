@@ -22,8 +22,10 @@ const RestaurantCard = ({ restaurant, onClick }) => {
     deliveryTime,
     imageUrl,
     description,
-    isOpen,
+    active,
   } = restaurant;
+
+  const isOpen = active;
 
   // Placeholder image if none provided
   const displayImage =

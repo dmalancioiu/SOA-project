@@ -26,7 +26,7 @@ api.interceptors.request.use(
 const orderService = {
   getUserOrders: async () => {
     try {
-      const response = await api.get('/orders/user');
+      const response = await api.get('/orders/my-orders');
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch orders');

@@ -54,17 +54,23 @@ const LoginPage = () => {
       return;
     }
 
-    //setLoading(true);
+    setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      const response = await login(formData.email, formData.password);
       toast.success('Login successful!');
-      //navigate('/restaurants');
+
+      // Redirect based on user role
+      if (response.role === 'DRIVER') {
+        navigate('/dashboard');
+      } else {
+        navigate('/restaurants');
+      }
     } catch (error) {
       toast.error(error.message || 'Login failed');
       setErrors({ general: error.message || 'Login failed' });
     } finally {
-     // setLoading(false);
+      setLoading(false);
     }
   };
 

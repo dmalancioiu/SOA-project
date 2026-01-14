@@ -27,10 +27,12 @@ const MenuItemCard = ({ item, onAddToCart, restaurantOpen = true }) => {
     imageUrl,
     category,
     isVegetarian,
-    isAvailable,
+    available,
     discount,
   } = item;
 
+  const isAvailable = available;
+  
   // Placeholder image if none provided
   const displayImage =
     imageUrl || `https://via.placeholder.com/300x200?text=${encodeURIComponent(name)}`;

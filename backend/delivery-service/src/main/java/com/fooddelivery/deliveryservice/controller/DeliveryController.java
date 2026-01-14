@@ -29,6 +29,13 @@ public class DeliveryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/my-deliveries")
+    public ResponseEntity<List<DeliveryResponse>> getMyDeliveries(@RequestHeader("X-User-Id") Long driverId) {
+        log.info("Fetching deliveries for current driver: {}", driverId);
+        List<DeliveryResponse> responses = deliveryService.getDeliveriesByDriverId(driverId);
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DeliveryResponse> getDelivery(@PathVariable Long id) {
         log.info("Fetching delivery with id: {}", id);

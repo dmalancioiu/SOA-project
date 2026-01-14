@@ -147,7 +147,7 @@ const MenuView = () => {
                   {restaurant.deliveryTime || '30-40'} min
                 </Typography>
               </Box>
-              {!restaurant.isOpen && (
+              {!restaurant.active && (
                 <Chip label="Currently Closed" color="error" />
               )}
             </Box>
@@ -188,7 +188,7 @@ const MenuView = () => {
                     <MenuItemCard
                       item={item}
                       onAddToCart={handleAddToCart}
-                      restaurantOpen={restaurant.isOpen}
+                      restaurantOpen={restaurant.active}
                     />
                   </Grid>
                 ))}

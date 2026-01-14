@@ -7,12 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MenuItemResponse {
+public class MenuItemResponse implements Serializable {
 
     private Long id;
     private Long restaurantId;

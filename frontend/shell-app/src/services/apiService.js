@@ -27,8 +27,10 @@ apiService.interceptors.request.use(
 apiService.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Unauthorized - clear auth data and redirect to login
+    const originalRequest = error.config;
+
+    // Fix: Do not redirect if the error comes from the Login page itself
+    if (error.response?.status === 401 && !originalRequest.url.includes('/auth/login')) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
